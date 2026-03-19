@@ -1,0 +1,22 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*]
+indent_style = space
+
+# 2 espaços é o "padrão da indústria" no ecossistema JS/TS
+indent_size = 2
+
+#define um tipo unico de quebra de linha para evitar problemas de compatibilidade entre sistemas operacionais
+end_of_line = lf
+
+# define o charset do arquivo para evitar problemas de codificação
+charset = utf-8
+
+# remove whitespace no final da linha que bagunçam o git diff
+trim_trailing_whitespace = true
+
+# é boa prática ter uma linha em branco no final do arquivo pois isso ajuda a evitar problemas
+insert_final_newline = true
