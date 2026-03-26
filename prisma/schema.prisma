@@ -86,8 +86,8 @@ model OrderItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  idProduct String
-  product Product @relation(fields: [idProduct], references: [id], onDelete: Cascade)
+  idProduct String?
+  product Product? @relation(fields: [idProduct], references: [id], onDelete: SetNull)
 
   idOrder String
   order Order @relation(fields: [idOrder], references: [id], onDelete: Cascade)
@@ -102,7 +102,7 @@ model OrderItem {
 model Cart {
   id String @id @default(uuid())
   userId String
-  checkOut Boolean @default(false)
+  isCheckedOut Boolean @default(false)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   cartItems CartItem[]
   orders Order[]
@@ -137,7 +137,7 @@ model Payment {
   id String @id @default(uuid())
   amount Decimal @db.Decimal(10, 2)
   status PaymentStatus @default(PENDING)
-  currency String @default("USD")
+  currency String @default("BRL")
   paymentMethod String?
   transactionId String?
   createdAt DateTime @default(now())
@@ -161,7 +161,7 @@ model Product {
   description String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  price Decimal
+  price Decimal @db.Decimal(10, 2)
   stock Int @default(0)
   sku String @unique
   imageUrl String?
@@ -170,8 +170,8 @@ model Product {
   growthCycle Int @default(0)
   region String?
 
-  idCulture String
-  culture Culture @relation( fields: [idCulture], references: [id], onDelete: Cascade)
+  idCulture String?
+  culture Culture? @relation( fields: [idCulture], references: [id], onDelete: SetNull)
 
   idGeneticTechnology String?
   geneticTechnology GeneticTechnology? @relation( fields: [idGeneticTechnology], references: [id], onDelete: SetNull)
@@ -179,18 +179,15 @@ model Product {
   orderItems OrderItem[]
   cartItems CartItem[]
   productSoils ProductSoil[]
+  productTraits ProductTrait[]
+  productClimates ProductClimate[]
 
   @@index([sku])
   @@index([name])
   @@index([idCulture])
   @@index([idGeneticTechnology])
   @@index([isActive])
-
-
   @@map("products")
-
-  productTraits ProductTrait[]
-  productClimates ProductClimate[]
 }
 
 model GeneticTechnology {
@@ -243,7 +240,7 @@ model ProductTrait {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@id([productId, traitId])
 
   @@index([productId])
@@ -278,6 +275,8 @@ model Climate{
   updatedAt DateTime @updatedAt
 
   productClimates ProductClimate[]
+
+  @@map("climates")
 }
 
 model ProductClimate {
