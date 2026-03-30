@@ -1,0 +1,291 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id String @id @default(uuid())
+  email String @unique
+  password String
+  firstName String?
+  lastName String?
+  role Role @default(USER)
+  refreshToken String?
+
+  //Relations
+  orders Order[]
+  carts Cart[]
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@map("users")
+
+}
+
+model Order {
+  id String @id @default(uuid())
+
+  orderNumber String @unique @default(cuid())
+  status OrderStatus
+  totalAmount Decimal @db.Decimal(10, 2)
+  shippingAddress String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  cartId String?
+  cart Cart? @relation(fields: [cartId], references: [id] )
+
+  orderItems OrderItem[]
+  payment Payment?
+
+  @@index([userId])
+  @@index([orderNumber])
+  @@index([status])
+  @@map("orders")
+
+}
+
+model OrderItem {
+  id String @id @default(uuid())
+  quantity Int
+  price Decimal @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  idProduct String?
+  product Product? @relation(fields: [idProduct], references: [id], onDelete: SetNull)
+
+  idOrder String
+  order Order @relation(fields: [idOrder], references: [id], onDelete: Cascade)
+
+  @@index([idProduct])
+  @@index([idOrder])
+  @@map("order_items")
+
+}
+
+
+model Cart {
+  id String @id @default(uuid())
+  userId String
+  isCheckedOut Boolean @default(false)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cartItems CartItem[]
+  orders Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("carts")
+}
+
+model CartItem {
+  id String @id @default(uuid())
+  quantity Int
+
+  productId String
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  cartId String
+  cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId,productId])
+  @@index([cartId])
+  @@index([productId])
+  @@map("cart_items")
+
+}
+
+model Payment {
+  id String @id @default(uuid())
+  amount Decimal @db.Decimal(10, 2)
+  status PaymentStatus @default(PENDING)
+  currency String @default("BRL")
+  paymentMethod String?
+  transactionId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  orderId String @unique
+  order Order @relation(fields: [orderId], references: [id], onDelete:Cascade)
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([transactionId])
+  @@map("payments")
+}
+
+model Product {
+  id String @id @default(uuid())
+  name String
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  price Decimal @db.Decimal(10, 2)
+  stock Int @default(0)
+  sku String @unique
+  imageUrl String?
+  isActive Boolean @default(true)
+  productivity Float @default(0)
+  growthCycle Int @default(0)
+  region String?
+
+  idCulture String?
+  culture Culture? @relation( fields: [idCulture], references: [id], onDelete: SetNull)
+
+  idGeneticTechnology String?
+  geneticTechnology GeneticTechnology? @relation( fields: [idGeneticTechnology], references: [id], onDelete: SetNull)
+
+  orderItems OrderItem[]
+  cartItems CartItem[]
+  productSoils ProductSoil[]
+  productTraits ProductTrait[]
+  productClimates ProductClimate[]
+
+  @@index([sku])
+  @@index([name])
+  @@index([idCulture])
+  @@index([idGeneticTechnology])
+  @@index([isActive])
+  @@map("products")
+}
+
+model GeneticTechnology {
+  id String @id @default(uuid())
+  name String
+  description String?
+  Products Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("genetic_technologies")
+}
+
+model Culture {
+  id String @id @default(uuid())
+  name String
+  slug String @unique
+  imageUrl String?
+  isActive Boolean @default(true)
+  Products Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([slug])
+  @@index([isActive])
+  @@map("cultures")
+}
+
+
+
+model GeneticTrait {
+  id String @id @default(uuid())
+  name String
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  productTraits ProductTrait[]
+
+  @@index([name])
+  @@map("genetic_traits")
+}
+
+model ProductTrait {
+  productId String
+  traitId String
+  level String
+
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  trait GeneticTrait @relation(fields: [traitId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([productId, traitId])
+
+  @@index([productId])
+  @@index([traitId])
+  @@map("product_traits")
+}
+
+model ProductSoil {
+  productId String
+  soilTypeId String
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  soilType SoilType @relation(fields: [soilTypeId], references: [id], onDelete: Cascade)
+
+  @@id([productId, soilTypeId])
+  @@map("product_soils")
+}
+
+model SoilType {
+  id String @id @default(uuid())
+  name String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  productSoils ProductSoil[]
+  @@map("soil_types")
+}
+
+model Climate{
+  id String @id @default(uuid())
+  name String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  productClimates ProductClimate[]
+
+  @@map("climates")
+}
+
+model ProductClimate {
+  productId String
+  climateId String
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  climate Climate @relation(fields: [climateId], references: [id], onDelete: Cascade)
+
+  @@id([productId, climateId])
+  @@map("product_climates")
+}
