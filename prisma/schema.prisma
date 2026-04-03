@@ -114,7 +114,7 @@ model Cart {
 }
 
 model CartItem {
-  id String @id @default(uuid())
+  id String @id @default(uuid()) 
   quantity Int
 
   productId String

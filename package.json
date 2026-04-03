@@ -26,6 +26,7 @@
     "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^7.1.0",
     "@prisma/config": "^7.1.0",
+    "class-validator": "^0.15.1",
     "pg": "^8.20.0",
     "prisma": "^7.1.0",
     "reflect-metadata": "^0.2.2",
